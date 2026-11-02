@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!-- ros2_control in Gazebo: position-controlled joints driven by gz_ros2_control. -->
+<robot xmlns:xacro="http://wiki.ros.org/xacro">
+  <xacro:include filename="$(find ur_description)/urdf/inc/ur_joint_control.xacro"/>
+
+  <xacro:macro name="ur_fusion_gazebo" params="initial_positions controllers_file">
+    <ros2_control name="ur_gz_system" type="system">
+      <hardware>
+        <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+      </hardware>
+      <xacro:ur_joint_control_description tf_prefix="" initial_positions="${initial_positions}"/>
+    </ros2_control>
+
+    <gazebo>
+      <plugin filename="gz_ros2_control-system"
+              name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+        <parameters>${controllers_file}</parameters>
+      </plugin>
+    </gazebo>
+  </xacro:macro>
+</robot>

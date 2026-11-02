@@ -1,0 +1,62 @@
+# Sensor noise models. Shared (/**) by the node that simulates the readings and
+# by the nodes that need to know how noisy they are (Kalman filter, dashboard).
+# Change a value here and both sides agree; to see what a mis-tuned filter does,
+# use fusion_node's *_noise_scale instead.
+/**:
+  ros__parameters:
+    ultrasonic:                    # HC-SR04 style time-of-flight sonar
+      min_range: 0.02              # [m]
+      max_range: 4.0               # [m]
+      field_of_view: 0.2618        # [rad] 15 deg cone
+      timing_jitter: 6.0e-5        # [s] 1-sigma echo timing jitter -> 10.3 mm
+      outlier_probability: 0.02    # chance of a spurious echo per ping
+      air_temperature: 20.0        # [deg C] real air temperature ...
+      assumed_temperature: 20.0    # [deg C] ... and the one the firmware assumes
+    infrared:                      # Sharp GP2Y0A21 style IR triangulation
+      min_range: 0.10              # [m]
+      max_range: 0.80              # [m]
+      field_of_view: 0.0524        # [rad] ~3 deg spot
+      k: 0.229                     # [V m]  V(d) = k / (d + d0) + v_offset
+      d0: 0.0042                   # [m]
+      v_offset: 0.10               # [V]
+      voltage_noise: 0.0125        # [V] 1-sigma -> 0.6 mm at 10 cm, 35 mm at 80 cm
+      adc_bits: 10
+      adc_reference: 5.0           # [V]
+
+sensor_models_node:
+  ros__parameters:
+    random_seed: -1                # >= 0 for repeatable noise
+    ultrasonic_frame: ultrasonic_link
+    infrared_frame: infrared_link
+    ground_truth_frame: sensor_boresight
+
+fusion_node:
+  ros__parameters:
+    accel_psd: 0.005               # [m^2/s^3] process noise q of the constant-velocity model
+    gate_sigma: 3.0                # reject readings further than this from the prediction
+    initial_velocity_std: 0.5      # [m/s]
+    max_consecutive_rejections: 5  # then restart the filter from the latest reading
+    ultrasonic_noise_scale: 1.0    # R used by the filter = scale * true noise variance
+    infrared_noise_scale: 1.0
+    reorder_latency: 0.05          # [s] hold readings this long to fuse them in time order
+    estimate_frame: sensor_boresight
+
+scan_motion_node:
+  ros__parameters:
+    base_frame: base_link
+    sensor_frame: sensor_boresight
+    surface_point: [0.45, 0.0, -0.45]   # top of the box in base_link (see the world file)
+    look_rpy: [0.0, 1.5708, 0.0]        # sensors look straight down
+    distances: [0.90, 0.15, 0.45, 0.90] # [m] scan waypoints: IR blind, IR best, crossover
+    average_speed: 0.08            # [m/s]
+    dwell_time: 3.0                # [s] pause at each waypoint
+    move_to_start_time: 5.0        # [s]
+    waypoint_period: 0.1           # [s]
+    loop: true
+
+dashboard_node:
+  ros__parameters:
+    window: 40.0                   # [s] of history in the time plots and the scorecard
+    save_period: 10.0              # [s] PNG interval when headless
+    # headless and output_dir come from the launch arguments dashboard_headless and
+    # dashboard_output_dir (a node-specific value here would override them).

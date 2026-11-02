@@ -1,0 +1,146 @@
+<?xml version="1.0"?>
+<!--
+  Sensor bracket for the tool flange (tool0: z points out of the flange).
+
+  Two sensors sit side by side, both looking along tool0 z:
+    ultrasonic_link   HC-SR04 style sonar          15 deg cone, 2 cm - 4 m, 15 Hz
+    infrared_link     Sharp GP2Y0A21 style IR      ~3 deg spot, 10 - 80 cm, 25 Hz
+    sensor_boresight  bracket centre; a single ideal ray here is the ground truth
+
+  Every frame has its x axis along the beam (sensor_msgs/Range convention).
+  Gazebo only ray-casts the beams (gpu_lidar); ur_fusion/sensor_models_node turns
+  those ideal distances into realistic, noisy readings.
+-->
+<robot xmlns:xacro="http://wiki.ros.org/xacro">
+  <xacro:property name="face_offset" value="0.030"/>     <!-- tool0 -> sensor front faces [m] -->
+  <xacro:property name="sensor_offset" value="0.025"/>   <!-- each sensor from the centre [m] -->
+
+  <xacro:macro name="gz_ray_sensor" params="name frame rate samples fov min_range max_range">
+    <gazebo reference="${frame}">
+      <sensor name="${name}" type="gpu_lidar">
+        <topic>/ideal/${name}/scan</topic>
+        <update_rate>${rate}</update_rate>
+        <always_on>true</always_on>
+        <visualize>false</visualize>
+        <lidar>
+          <scan>
+            <horizontal>
+              <samples>${samples}</samples>
+              <resolution>1</resolution>
+              <min_angle>${-fov / 2}</min_angle>
+              <max_angle>${fov / 2}</max_angle>
+            </horizontal>
+            <vertical>
+              <samples>${samples}</samples>
+              <resolution>1</resolution>
+              <min_angle>${-fov / 2}</min_angle>
+              <max_angle>${fov / 2}</max_angle>
+            </vertical>
+          </scan>
+          <range>
+            <min>${min_range}</min>
+            <max>${max_range}</max>
+            <resolution>0.0001</resolution>
+          </range>
+        </lidar>
+      </sensor>
+    </gazebo>
+  </xacro:macro>
+
+  <xacro:macro name="beam_frame" params="name xyz">
+    <link name="${name}"/>
+    <joint name="sensor_bracket-${name}" type="fixed">
+      <parent link="sensor_bracket"/>
+      <child link="${name}"/>
+      <!-- rotates x onto tool0 z, so the beam points out of the flange -->
+      <origin xyz="${xyz}" rpy="${-pi / 2} ${-pi / 2} 0"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:macro name="sensor_bracket" params="parent">
+    <link name="sensor_bracket">
+      <!-- flange adapter and mounting plate -->
+      <visual>
+        <origin xyz="0 0 0.004"/>
+        <geometry>
+          <cylinder radius="0.032" length="0.008"/>
+        </geometry>
+        <material name="bracket_grey">
+          <color rgba="0.20 0.21 0.23 1"/>
+        </material>
+      </visual>
+      <visual>
+        <origin xyz="0 0 0.011"/>
+        <geometry>
+          <box size="0.090 0.032 0.006"/>
+        </geometry>
+        <material name="bracket_grey"/>
+      </visual>
+      <!-- ultrasonic module: blue PCB with two transducers -->
+      <visual>
+        <origin xyz="${sensor_offset} 0 0.0148"/>
+        <geometry>
+          <box size="0.045 0.020 0.0016"/>
+        </geometry>
+        <material name="pcb_blue">
+          <color rgba="0.10 0.30 0.75 1"/>
+        </material>
+      </visual>
+      <visual>
+        <origin xyz="${sensor_offset + 0.013} 0 0.0228"/>
+        <geometry>
+          <cylinder radius="0.008" length="0.0144"/>
+        </geometry>
+        <material name="transducer_silver">
+          <color rgba="0.78 0.79 0.80 1"/>
+        </material>
+      </visual>
+      <visual>
+        <origin xyz="${sensor_offset - 0.013} 0 0.0228"/>
+        <geometry>
+          <cylinder radius="0.008" length="0.0144"/>
+        </geometry>
+        <material name="transducer_silver"/>
+      </visual>
+      <!-- IR ranger: black body with the emitter / detector lenses at the front -->
+      <visual>
+        <origin xyz="${-sensor_offset} 0 0.022"/>
+        <geometry>
+          <box size="0.0295 0.0135 0.016"/>
+        </geometry>
+        <material name="ir_black">
+          <color rgba="0.05 0.05 0.06 1"/>
+        </material>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0.015"/>
+        <geometry>
+          <box size="0.095 0.035 0.030"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <origin xyz="0 0 0.015"/>
+        <mass value="0.08"/>
+        <inertia ixx="1e-5" iyy="7e-5" izz="7e-5" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+    </link>
+    <joint name="${parent}-sensor_bracket" type="fixed">
+      <parent link="${parent}"/>
+      <child link="sensor_bracket"/>
+    </joint>
+
+    <xacro:beam_frame name="ultrasonic_link" xyz="${sensor_offset} 0 ${face_offset}"/>
+    <xacro:beam_frame name="infrared_link" xyz="${-sensor_offset} 0 ${face_offset}"/>
+    <xacro:beam_frame name="sensor_boresight" xyz="0 0 ${face_offset}"/>
+
+    <!-- 9x9 rays over the 15 deg sonar cone; the nearest hit is the first echo -->
+    <xacro:gz_ray_sensor name="ultrasonic" frame="ultrasonic_link" rate="15" samples="9"
+                         fov="0.2618" min_range="0.02" max_range="4.5"/>
+    <!-- 3x3 rays over the narrow IR spot; the spot centroid is what it measures -->
+    <xacro:gz_ray_sensor name="infrared" frame="infrared_link" rate="25" samples="3"
+                         fov="0.0524" min_range="0.03" max_range="1.5"/>
+    <!-- one exact ray along the bracket centre line: the ground truth -->
+    <xacro:gz_ray_sensor name="ground_truth" frame="sensor_boresight" rate="50" samples="1"
+                         fov="0.0" min_range="0.01" max_range="5.0"/>
+  </xacro:macro>
+</robot>

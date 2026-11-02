@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>ur_fusion</name>
+  <version>0.1.0</version>
+  <description>
+    Ultrasonic + IR distance estimation on a simulated UR arm: sensor noise models,
+    Kalman filters (each sensor alone and fused), the scanning motion and a live
+    dashboard showing how fusion lowers the uncertainty.
+  </description>
+  <maintainer email="dave.shivam18@gmail.com">ShivamD18</maintainer>
+  <license>Apache-2.0</license>
+
+  <exec_depend>builtin_interfaces</exec_depend>
+  <exec_depend>controller_manager_msgs</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>python3-matplotlib</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>rcl_interfaces</exec_depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>rviz2</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>trajectory_msgs</exec_depend>
+  <exec_depend>ur_fusion_description</exec_depend>
+  <exec_depend>ur_fusion_interfaces</exec_depend>
+  <exec_depend>visualization_msgs</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

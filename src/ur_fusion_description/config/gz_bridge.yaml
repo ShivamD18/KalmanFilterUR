@@ -1,0 +1,25 @@
+# Gazebo -> ROS: simulation clock and the ideal (noise-free) ray casts of the
+# three beams on the sensor bracket.
+- ros_topic_name: /clock
+  gz_topic_name: /clock
+  ros_type_name: rosgraph_msgs/msg/Clock
+  gz_type_name: gz.msgs.Clock
+  direction: GZ_TO_ROS
+
+- ros_topic_name: /ideal/ultrasonic/scan
+  gz_topic_name: /ideal/ultrasonic/scan
+  ros_type_name: sensor_msgs/msg/LaserScan
+  gz_type_name: gz.msgs.LaserScan
+  direction: GZ_TO_ROS
+
+- ros_topic_name: /ideal/infrared/scan
+  gz_topic_name: /ideal/infrared/scan
+  ros_type_name: sensor_msgs/msg/LaserScan
+  gz_type_name: gz.msgs.LaserScan
+  direction: GZ_TO_ROS
+
+- ros_topic_name: /ideal/ground_truth/scan
+  gz_topic_name: /ideal/ground_truth/scan
+  ros_type_name: sensor_msgs/msg/LaserScan
+  gz_type_name: gz.msgs.LaserScan
+  direction: GZ_TO_ROS
