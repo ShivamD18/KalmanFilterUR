@@ -90,6 +90,12 @@ sensor, and a single exact ray along the bracket's centre line as ground truth.
 is ±2σ thick, next to a thin dark plate at the true distance. The thinner the
 slab, the more certain the filter. The blue fused slab is always the thinnest.
 
+![RViz view of the UR5e with its sensor beams](docs/rviz_view.png)
+
+*RViz during a scan: the UR5e on its pedestal, the wide orange ultrasonic cone and
+the narrow green IR beam aimed down at the box, and the ±2σ slabs of the three
+filters at the estimated distance.*
+
 **The dashboard** has four panels:
 
 1. *Distance to the object*: true distance, raw readings, and the fused
