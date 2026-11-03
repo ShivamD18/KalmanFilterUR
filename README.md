@@ -99,6 +99,11 @@ sensor, and a single exact ray along the bracket's centre line as ground truth.
 *Close-up during the scan: the bracket (sonar and IR sensor side by side) looking
 down at the taped part on the conveyor.*
 
+![The Gazebo GUI with the work cell](docs/gazebo_gui.png)
+
+*The Gazebo window during a run, with the entity tree: the hall, the lights, the
+robot (`ur_fusion`) and the static `workcell` model.*
+
 **RViz** shows the robot and the work cell, the two beams as cones, and each
 filter's estimate as a slab that is ±2σ thick, next to a thin dark plate at the
 true distance. The thinner the slab, the more certain the filter; the blue fused
@@ -107,9 +112,8 @@ gives each filter's 2σ in millimetres.
 
 ![RViz view of the UR5e with its sensor beams](docs/rviz_view.png)
 
-*RViz during a scan, from before the work cell was added: the wide orange
-ultrasonic cone and the narrow green IR beam, and the ±2σ slabs of the three
-filters at the estimated distance.*
+*RViz during a scan: the robot and the work cell, the orange ultrasonic cone and
+the green IR beam on the part, and the ±2σ slabs of the three filters.*
 
 **The dashboard** has four panels:
 
