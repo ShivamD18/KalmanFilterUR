@@ -20,9 +20,9 @@ from visualization_msgs.msg import Marker, MarkerArray
 
 FILTERS = {
     # filter: (offset along the boresight y axis [m], RGB, label)
-    'ultrasonic_only': (0.11, (0.922, 0.408, 0.204), 'Ultrasonic only'),
-    'fused': (0.0, (0.165, 0.471, 0.839), 'Fused (US + IR)'),
-    'infrared_only': (-0.11, (0.106, 0.686, 0.478), 'IR only'),
+    'ultrasonic_only': (0.11, (0.922, 0.408, 0.204), 'Ultrasonic'),
+    'fused': (0.0, (0.165, 0.471, 0.839), 'Fused'),
+    'infrared_only': (-0.11, (0.106, 0.686, 0.478), 'IR'),
 }
 SLAB_SIZE = 0.08        # [m] footprint of each slab
 MIN_THICKNESS = 0.001   # [m] keep very certain estimates visible
@@ -30,6 +30,18 @@ MAX_THICKNESS = 0.40    # [m] keep a lost filter from filling the screen
 LABEL_COLUMN = -0.45    # [m] labels sit in a column this far along boresight y
 LINE_SPACING = 0.045    # [m] between label lines
 TEXT_HEIGHT = 0.03      # [m]
+
+
+def label_text(label: str, two_sigma: float) -> str:
+    """
+    Label for one filter, e.g. 'Fused:+/-9.4mm'.
+
+    RViz sizes a space once, for 1 m tall text, and keeps that width when the
+    marker shrinks the text, so every space turns into a gap of about half a
+    metre. Its font also has no glyphs for symbols like plus-minus or sigma.
+    Hence plain ASCII and no spaces.
+    """
+    return f'{label}:+/-{1000 * two_sigma:.1f}mm'
 
 
 class UncertaintyMarkersNode(Node):
@@ -56,7 +68,7 @@ class UncertaintyMarkersNode(Node):
         anchor = self.label_anchor()
         if anchor is not None:
             markers.markers.append(self.label(
-                -2, anchor, '2-sigma uncertainty', (1.0, 1.0, 1.0)))
+                -2, anchor, '2-sigma:', (1.0, 1.0, 1.0)))
         for i, (name, (offset, rgb, label)) in enumerate(FILTERS.items()):
             est = self.latest.get(name)
             if est is None:
@@ -68,11 +80,9 @@ class UncertaintyMarkersNode(Node):
             slab.pose.position.y = offset
             slab.scale.x, slab.scale.y, slab.scale.z = thickness, SLAB_SIZE, SLAB_SIZE
             markers.markers.append(slab)
-            # Plain ASCII: RViz's text renderer has no glyphs for symbols like
-            # plus-minus or sigma and garbles the whole line around them.
             if anchor is not None:
-                markers.markers.append(self.label(
-                    i - 1, anchor, f'{label}: +/- {1000 * two_sigma:.1f} mm', rgb))
+                text = label_text(label, two_sigma)
+                markers.markers.append(self.label(i - 1, anchor, text, rgb))
 
         if self.truth is not None and math.isfinite(self.truth.range):
             plate = self.marker(self.truth.header.frame_id, 'truth', 0, Marker.CUBE,
