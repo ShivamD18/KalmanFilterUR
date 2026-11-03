@@ -39,7 +39,7 @@ class ScanMotionNode(Node):
         self.sensor_frame = param('sensor_frame', 'sensor_boresight').value
         # Point on the object the sensors look at, and the look direction (x axis of
         # look_rpy), both in base_frame. The sensors sit `distance` back along it.
-        self.surface_point = np.array(param('surface_point', [0.45, 0.0, -0.45]).value)
+        self.surface_point = np.array(param('surface_point', [0.55, 0.0, -0.45]).value)
         self.look_rotation = rpy_to_matrix(*param('look_rpy', [0.0, math.pi / 2, 0.0]).value)
         self.profile = SweepProfile(list(param('distances', [0.90, 0.15, 0.45, 0.90]).value),
                                     param('average_speed', 0.08).value,

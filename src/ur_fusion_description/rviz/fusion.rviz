@@ -4,8 +4,8 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded: ~
-      Splitter Ratio: 0.55
-    Tree Height: 500
+      Splitter Ratio: 0.550000011920929
+    Tree Height: 491
   - Class: rviz_common/Views
     Expanded:
       - /Current View1
@@ -20,7 +20,7 @@ Visualization Manager:
       Color: 160; 160; 164
       Enabled: true
       Line Style:
-        Line Width: 0.03
+        Line Width: 0.029999999329447746
         Value: Lines
       Name: Grid
       Normal Cell Count: 0
@@ -44,12 +44,167 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /robot_description
       Enabled: true
+      Links:
+        All Links Enabled: true
+        Expand Joint Details: false
+        Expand Link Details: false
+        Expand Tree: false
+        Link Tree Style: Links in Alphabetic Order
+        base:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        base_link_inertia:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        flange:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        forearm_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        ft_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        infrared_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        pedestal:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        sensor_boresight:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        sensor_bracket:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        shoulder_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        tool0:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        ultrasonic_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        upper_arm_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        world:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        wrist_1_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        wrist_2_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        wrist_3_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+      Mass Properties:
+        Inertia: false
+        Mass: false
       Name: RobotModel
       TF Prefix: ""
       Update Interval: 0
       Value: true
       Visual Enabled: true
-    - Alpha: 0.3
+    - Alpha: 1
+      Class: rviz_default_plugins/RobotModel
+      Collision Enabled: false
+      Description File: ""
+      Description Source: Topic
+      Description Topic:
+        Depth: 5
+        Durability Policy: Transient Local
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /workcell/robot_description
+      Enabled: true
+      Links:
+        All Links Enabled: true
+        Expand Joint Details: false
+        Expand Link Details: false
+        Expand Tree: false
+        Link Tree Style: Links in Alphabetic Order
+        control_cabinet:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        conveyor:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        floor_markings:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        inspected_part:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        pallet_station:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        queued_cartons:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        safety_guarding:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        world:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+      Mass Properties:
+        Inertia: false
+        Mass: false
+      Name: Work cell
+      TF Prefix: ""
+      Update Interval: 0
+      Value: true
+      Visual Enabled: true
+    - Alpha: 0.30000001192092896
       Buffer Length: 1
       Class: rviz_default_plugins/Range
       Color: 235; 104; 52
@@ -58,11 +213,12 @@ Visualization Manager:
       Topic:
         Depth: 5
         Durability Policy: Volatile
+        Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /ultrasonic/range
       Value: true
-    - Alpha: 0.6
+    - Alpha: 0.6000000238418579
       Buffer Length: 1
       Class: rviz_default_plugins/Range
       Color: 27; 175; 122
@@ -71,6 +227,7 @@ Visualization Manager:
       Topic:
         Depth: 5
         Durability Policy: Volatile
+        Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /infrared/range
@@ -79,7 +236,10 @@ Visualization Manager:
       Enabled: true
       Name: Estimates (2-sigma slabs)
       Namespaces:
-        {}
+        Value: true
+        estimate: true
+        label: true
+        truth: true
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -89,12 +249,18 @@ Visualization Manager:
       Value: true
     - Class: rviz_default_plugins/TF
       Enabled: false
+      Filter (blacklist): ""
+      Filter (whitelist): ""
       Frame Timeout: 15
-      Marker Scale: 0.15
+      Frames:
+        All Enabled: true
+      Marker Scale: 0.15000000596046448
       Name: TF
       Show Arrows: false
       Show Axes: true
       Show Names: false
+      Tree:
+        {}
       Update Interval: 0
       Value: false
   Enabled: true
@@ -118,34 +284,35 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 2.0
+      Distance: 4.0364789962768555
       Enable Stereo Rendering:
-        Stereo Eye Separation: 0.06
+        Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.4
-        Y: 0
-        Z: 0.45
+        X: 0.3286832869052887
+        Y: 0.03460543230175972
+        Z: 0.6354610323905945
       Focal Shape Fixed Size: true
-      Focal Shape Size: 0.05
+      Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
-      Near Clip Distance: 0.01
-      Pitch: 0.3
+      Near Clip Distance: 0.009999999776482582
+      Pitch: 0.4099999964237213
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz_default_plugins)
-      Yaw: 5.6
+      Yaw: 5.529999256134033
     Saved: ~
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 900
+  Height: 1020
   Hide Left Dock: false
   Hide Right Dock: true
+  QMainWindow State: 000000ff00000000fd0000000100000000000001d40000039efc0200000002fb000000100044006900730070006c006100790073010000003f0000022b000000cc00fffffffb0000000a0056006900650077007301000002700000016d000000a900ffffff000005a60000039e00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Views:
-    collapsed: true
-  Width: 1400
-  X: 60
-  Y: 60
+    collapsed: false
+  Width: 1920
+  X: 1920
+  Y: 28

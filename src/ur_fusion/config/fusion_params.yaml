@@ -45,7 +45,8 @@ scan_motion_node:
   ros__parameters:
     base_frame: base_link
     sensor_frame: sensor_boresight
-    surface_point: [0.45, 0.0, -0.45]   # top of the box in base_link (see the world file)
+    surface_point: [0.55, 0.0, -0.45]   # top of the part on the conveyor, in base_link
+                                        # (see ur_fusion_description/urdf/workcell.urdf.xacro)
     look_rpy: [0.0, 1.5708, 0.0]        # sensors look straight down
     distances: [0.90, 0.15, 0.45, 0.90] # [m] scan waypoints: IR blind, IR best, crossover
     average_speed: 0.08            # [m/s]

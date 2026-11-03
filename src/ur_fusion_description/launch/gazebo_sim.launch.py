@@ -1,4 +1,7 @@
-"""Gazebo with the UR arm, its sensor bracket and the box, plus ros2_control.
+"""
+Start Gazebo with the UR arm, its sensor bracket and the work cell.
+
+Also starts ros2_control and the Gazebo -> ROS bridge:
 
     ros2 launch ur_fusion_description gazebo_sim.launch.py             # with the Gazebo GUI
     ros2 launch ur_fusion_description gazebo_sim.launch.py gui:=false  # headless server
@@ -50,6 +53,26 @@ def generate_launch_description():
         arguments=['-topic', 'robot_description', '-name', 'ur_fusion'],
         output='screen',
     )
+
+    # The work cell is static scenery with its own description, so RViz can draw it
+    # (from /workcell/robot_description) exactly as Gazebo simulates it.
+    workcell_description = ParameterValue(Command([
+        FindExecutable(name='xacro'), ' ',
+        PathJoinSubstitution([pkg, 'urdf', 'workcell.urdf.xacro']),
+    ]), value_type=str)
+    workcell_state_publisher = Node(
+        package='robot_state_publisher',
+        executable='robot_state_publisher',
+        namespace='workcell',
+        parameters=[{'robot_description': workcell_description, 'use_sim_time': True}],
+        output='screen',
+    )
+    spawn_workcell = Node(
+        package='ros_gz_sim',
+        executable='create',
+        arguments=['-topic', '/workcell/robot_description', '-name', 'workcell'],
+        output='screen',
+    )
     bridge = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
@@ -68,15 +91,17 @@ def generate_launch_description():
         DeclareLaunchArgument('ur_type', default_value='ur5e',
                               description='UR model, e.g. ur5e (the scan is tuned for it)'),
         DeclareLaunchArgument('gui', default_value='true', description='Show the Gazebo GUI'),
-        DeclareLaunchArgument('world',
-                              default_value=PathJoinSubstitution([pkg, 'worlds', 'fusion_lab.sdf']),
-                              description='World file'),
+        DeclareLaunchArgument('world', description='World file',
+                              default_value=PathJoinSubstitution(
+                                  [pkg, 'worlds', 'fusion_lab.sdf'])),
         # Keep Gazebo's transport on loopback: otherwise its multicast discovery runs
         # over Wi-Fi, and a network change silently cuts the sensor data and /clock.
         SetEnvironmentVariable('GZ_IP', os.environ.get('GZ_IP', '127.0.0.1')),
         OpaqueFunction(function=gazebo),
         robot_state_publisher,
         spawn_robot,
+        workcell_state_publisher,
+        spawn_workcell,
         bridge,
         # The controller manager lives inside Gazebo, so wait until the robot is in.
         RegisterEventHandler(OnProcessExit(target_action=spawn_robot, on_exit=controllers)),

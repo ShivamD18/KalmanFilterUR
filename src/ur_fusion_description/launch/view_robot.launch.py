@@ -1,4 +1,7 @@
-"""Inspect the arm and its sensor bracket in RViz, with sliders for the joints.
+"""
+Inspect the arm, its sensor bracket and the work cell in RViz.
+
+Joint sliders let you pose the arm by hand:
 
     ros2 launch ur_fusion_description view_robot.launch.py
 """
@@ -19,10 +22,17 @@ def generate_launch_description():
         ' ur_type:=', LaunchConfiguration('ur_type'), ' sim_gazebo:=false',
     ]), value_type=str)
 
+    workcell_description = ParameterValue(Command([
+        FindExecutable(name='xacro'), ' ',
+        PathJoinSubstitution([pkg, 'urdf', 'workcell.urdf.xacro']),
+    ]), value_type=str)
+
     return LaunchDescription([
         DeclareLaunchArgument('ur_type', default_value='ur5e'),
         Node(package='robot_state_publisher', executable='robot_state_publisher',
              parameters=[{'robot_description': robot_description}]),
+        Node(package='robot_state_publisher', executable='robot_state_publisher',
+             namespace='workcell', parameters=[{'robot_description': workcell_description}]),
         Node(package='joint_state_publisher_gui', executable='joint_state_publisher_gui'),
         Node(package='rviz2', executable='rviz2',
              arguments=['-d', PathJoinSubstitution([pkg, 'rviz', 'fusion.rviz'])]),

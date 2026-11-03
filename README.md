@@ -3,9 +3,11 @@
 A small ROS 2 + Gazebo project that shows, with live numbers, why fusing two
 imperfect sensors gives a better distance estimate than either one alone.
 
-A UR5e on a pedestal carries a bracket with two range sensors that look straight
-down at a cardboard box. The arm sweeps the sensors from 0.90 m down to 0.15 m and
-back. Three Kalman filters estimate the distance at the same time:
+A UR5e on a steel riser, inside a guarded work cell, carries a bracket with two
+range sensors that look straight down at a part waiting on a belt conveyor. The
+arm sweeps the sensors from 0.90 m down to 0.15 m above the part and back, the
+way a robot might measure a part before picking it. Three Kalman filters
+estimate the distance at the same time:
 
 | filter            | uses                    |
 |-------------------|-------------------------|
@@ -16,6 +18,12 @@ back. Three Kalman filters estimate the distance at the same time:
 All three filters share the same motion model and the same noise models, so any
 difference between them comes only from the data each one receives. A live
 dashboard and RViz show how much smaller the fused uncertainty is.
+
+![The work cell in Gazebo](docs/workcell_gazebo.png)
+
+*The work cell in Gazebo: belt conveyor with the part, robot on its riser, pallet
+station, control cabinet with stack light, mesh guarding, light curtain and
+floor tape.*
 
 ![Live dashboard during a Gazebo run](docs/dashboard_gazebo.png)
 
@@ -82,18 +90,25 @@ colcon test --packages-select ur_fusion && colcon test-result --verbose
 
 ## What you are looking at
 
-**Gazebo** simulates the arm and the box. The sensor beams are GPU ray casts
+**Gazebo** simulates the arm in the work cell. The sensor beams are GPU ray casts
 (`gpu_lidar`): a 9×9 ray, 15° cone for the sonar, a 3×3 ray, 3° spot for the IR
 sensor, and a single exact ray along the bracket's centre line as ground truth.
 
-**RViz** shows the two beams as cones and each filter's estimate as a slab that
-is ±2σ thick, next to a thin dark plate at the true distance. The thinner the
-slab, the more certain the filter. The blue fused slab is always the thinnest.
+![The sensor bracket over the part](docs/sensor_closeup.png)
+
+*Close-up during the scan: the bracket (sonar and IR sensor side by side) looking
+down at the taped part on the conveyor.*
+
+**RViz** shows the robot and the work cell, the two beams as cones, and each
+filter's estimate as a slab that is ±2σ thick, next to a thin dark plate at the
+true distance. The thinner the slab, the more certain the filter; the blue fused
+slab is always the thinnest. A colour-coded column of labels beside the slabs
+gives each filter's 2σ in millimetres.
 
 ![RViz view of the UR5e with its sensor beams](docs/rviz_view.png)
 
-*RViz during a scan: the UR5e on its pedestal, the wide orange ultrasonic cone and
-the narrow green IR beam aimed down at the box, and the ±2σ slabs of the three
+*RViz during a scan, from before the work cell was added: the wide orange
+ultrasonic cone and the narrow green IR beam, and the ±2σ slabs of the three
 filters at the estimated distance.*
 
 **The dashboard** has four panels:
@@ -110,6 +125,26 @@ filters at the estimated distance.*
    filter: σ now, RMSE, NEES and the number of readings rejected as outliers.
 
 Press `s` in the dashboard window to save a PNG and `r` to reset its statistics.
+
+### The work cell
+
+The scenery lives in `ur_fusion_description/urdf/workcell.urdf.xacro`. It is
+spawned into Gazebo as a static model and published on
+`/workcell/robot_description` for RViz, so both always show the same cell. The
+hall around it (floor, walls, lighting) is in `worlds/fusion_lab.sdf`.
+
+| item | where |
+|---|---|
+| robot base | top of a 1.30 m riser at the origin |
+| belt conveyor | along y at x = 0.55 m, belt top 0.70 m |
+| part being measured | 350 × 350 × 150 mm carton, top face at z = 0.85 m |
+| pallet station | Euro pallet with cartons at (-0.45, 1.05) |
+| control cabinet + stack light | (-0.55, -1.0) |
+| guarding | mesh fence on the back and left sides, light curtain on the right |
+
+If you move the part, the conveyor or the riser, update `scan_motion_node`'s
+`surface_point`. It is the centre of the part's top face in `base_link`:
+(0.55, 0, 0.85 − 1.30) = (0.55, 0, −0.45).
 
 ## How it works
 
@@ -207,7 +242,7 @@ it is overconfident. The unit tests check this for all three filters.
 | package | contents |
 |---|---|
 | `ur_fusion_interfaces` | `DistanceEstimate.msg`: one filter's estimate, variance, innovation, NIS, gain |
-| `ur_fusion_description` | URDF/xacro (UR5e + pedestal + sensor bracket + gz sensors), Gazebo world, ros2_control config, RViz config, `gazebo_sim.launch.py`, `view_robot.launch.py` |
+| `ur_fusion_description` | URDF/xacro (UR5e + riser + sensor bracket + gz sensors, and the work cell), Gazebo world, ros2_control config, RViz config, `gazebo_sim.launch.py`, `view_robot.launch.py` |
 | `ur_fusion` | ROS-independent core (`sensor_models`, `kalman`, `fusion`, `kinematics`, `trajectory`, `plotting`), the five nodes, `fusion_demo.launch.py`, `offline_demo`, tests |
 
 | node | job |

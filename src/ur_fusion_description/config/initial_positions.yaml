@@ -1,8 +1,8 @@
-# Joint angles [rad] the arm starts with in Gazebo: sensors 0.9 m above the box,
+# Joint angles [rad] the arm starts with in Gazebo: sensors 0.9 m above the part,
 # looking straight down (the first pose of the scan, see ur_fusion/scan_motion_node).
-shoulder_pan_joint: -0.301
-shoulder_lift_joint: -1.717
-elbow_joint: 1.726
-wrist_1_joint: -1.579
+shoulder_pan_joint: -0.245
+shoulder_lift_joint: -1.472
+elbow_joint: 1.487
+wrist_1_joint: -1.586
 wrist_2_joint: -1.571
-wrist_3_joint: 2.841
+wrist_3_joint: 2.897

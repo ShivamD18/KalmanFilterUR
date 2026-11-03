@@ -36,12 +36,17 @@ def generate_launch_description():
                               description='Draw the dashboard off-screen and save PNGs'),
         DeclareLaunchArgument('dashboard_output_dir', default_value='',
                               description='Where the dashboard saves PNGs (~/.ros/ur_fusion)'),
+        DeclareLaunchArgument('world',
+                              default_value=PathJoinSubstitution(
+                                  [description, 'worlds', 'fusion_lab.sdf']),
+                              description='Gazebo world (the hall around the work cell)'),
 
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
                 PathJoinSubstitution([description, 'launch', 'gazebo_sim.launch.py'])),
             launch_arguments={'ur_type': LaunchConfiguration('ur_type'),
-                              'gui': LaunchConfiguration('gui')}.items(),
+                              'gui': LaunchConfiguration('gui'),
+                              'world': LaunchConfiguration('world')}.items(),
         ),
         fusion_node('sensor_models_node'),
         fusion_node('fusion_node'),

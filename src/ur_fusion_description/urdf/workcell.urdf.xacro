@@ -1,0 +1,253 @@
+<?xml version="1.0"?>
+<!--
+  Industrial work cell around the arm: a belt conveyor carrying the part to be
+  ranged, a pallet station, the robot's control cabinet with a stack light,
+  safety fencing, a light curtain on the open side and floor markings.
+
+  It is static scenery. The same description is spawned into Gazebo (where the
+  sensor beams see it) and shown in RViz.
+
+  The part on the conveyor is what the arm measures. Its top face is at
+  z = belt_height + part_height = 0.85 m, centred at (0.55, 0). With the arm on
+  its 1.30 m riser that is (0.55, 0, -0.45) in base_link, which must match
+  scan_motion_node's surface_point.
+-->
+<robot xmlns:xacro="http://wiki.ros.org/xacro" name="workcell">
+  <xacro:property name="conveyor_x" value="0.55"/>
+  <xacro:property name="conveyor_length" value="3.0"/>
+  <xacro:property name="belt_width" value="0.45"/>
+  <xacro:property name="belt_height" value="0.70"/>
+  <xacro:property name="part_size" value="0.35"/>
+  <xacro:property name="part_height" value="0.15"/>
+  <xacro:property name="fence_height" value="2.0"/>
+
+  <material name="aluminium"><color rgba="0.74 0.76 0.78 1"/></material>
+  <material name="belt_rubber"><color rgba="0.10 0.10 0.11 1"/></material>
+  <material name="drive_blue"><color rgba="0.12 0.30 0.60 1"/></material>
+  <material name="cardboard"><color rgba="0.72 0.55 0.35 1"/></material>
+  <material name="cardboard_dark"><color rgba="0.62 0.46 0.28 1"/></material>
+  <material name="packing_tape"><color rgba="0.82 0.70 0.50 1"/></material>
+  <material name="pallet_wood"><color rgba="0.80 0.67 0.48 1"/></material>
+  <material name="safety_yellow"><color rgba="0.96 0.76 0.05 1"/></material>
+  <material name="fence_black"><color rgba="0.09 0.09 0.10 1"/></material>
+  <material name="cabinet_grey"><color rgba="0.82 0.83 0.84 1"/></material>
+  <material name="panel_dark"><color rgba="0.20 0.22 0.25 1"/></material>
+  <material name="signal_green"><color rgba="0.10 0.80 0.25 1"/></material>
+  <material name="signal_amber"><color rgba="0.98 0.62 0.05 1"/></material>
+  <material name="signal_red"><color rgba="0.90 0.12 0.10 1"/></material>
+
+  <!-- helpers ............................................................ -->
+  <xacro:macro name="block" params="xyz size material rpy:='0 0 0'">
+    <visual>
+      <origin xyz="${xyz}" rpy="${rpy}"/>
+      <geometry><box size="${size}"/></geometry>
+      <material name="${material}"/>
+    </visual>
+  </xacro:macro>
+
+  <xacro:macro name="solid_block" params="xyz size material">
+    <xacro:block xyz="${xyz}" size="${size}" material="${material}"/>
+    <collision>
+      <origin xyz="${xyz}"/>
+      <geometry><box size="${size}"/></geometry>
+    </collision>
+  </xacro:macro>
+
+  <xacro:macro name="rod" params="xyz radius length material rpy:='0 0 0'">
+    <visual>
+      <origin xyz="${xyz}" rpy="${rpy}"/>
+      <geometry><cylinder radius="${radius}" length="${length}"/></geometry>
+      <material name="${material}"/>
+    </visual>
+  </xacro:macro>
+
+  <!-- Every link needs mass or the URDF -> SDF conversion may drop it; the
+       whole model is static in Gazebo, so the values do not matter. -->
+  <xacro:macro name="fixed_part" params="name **geometry">
+    <link name="${name}">
+      <xacro:insert_block name="geometry"/>
+      <inertial>
+        <mass value="1.0"/>
+        <inertia ixx="0.1" iyy="0.1" izz="0.1" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+    </link>
+    <joint name="world-${name}" type="fixed">
+      <parent link="world"/>
+      <child link="${name}"/>
+    </joint>
+  </xacro:macro>
+
+  <!-- Repeat a block `count` times, stepping by (dx, dy, dz). -->
+  <xacro:macro name="row" params="x y z dx dy dz count size material">
+    <xacro:if value="${count > 0}">
+      <xacro:block xyz="${x} ${y} ${z}" size="${size}" material="${material}"/>
+      <xacro:row x="${x + dx}" y="${y + dy}" z="${z + dz}" dx="${dx}" dy="${dy}" dz="${dz}"
+                 count="${count - 1}" size="${size}" material="${material}"/>
+    </xacro:if>
+  </xacro:macro>
+
+  <!-- One welded-mesh guard panel with a post at its start, along x or y. -->
+  <xacro:macro name="fence_panel" params="x y length along">
+    <xacro:property name="ux" value="${1 if along == 'x' else 0}"/>
+    <xacro:property name="uy" value="${1 if along == 'y' else 0}"/>
+    <xacro:property name="wires" value="${int(length / 0.08)}"/>
+    <xacro:block xyz="${x} ${y} ${fence_height / 2}" size="0.06 0.06 ${fence_height}"
+                 material="safety_yellow"/>
+    <xacro:property name="cx" value="${x + ux * length / 2}"/>
+    <xacro:property name="cy" value="${y + uy * length / 2}"/>
+    <xacro:property name="rail" value="${(ux * length + 0.025)} ${(uy * length + 0.025)} 0.025"/>
+    <xacro:block xyz="${cx} ${cy} 0.17" size="${rail}" material="fence_black"/>
+    <xacro:block xyz="${cx} ${cy} ${fence_height - 0.05}" size="${rail}" material="fence_black"/>
+    <xacro:row x="${x + ux * 0.04}" y="${y + uy * 0.04}" z="${(fence_height + 0.12) / 2}"
+               dx="${ux * 0.08}" dy="${uy * 0.08}" dz="0" count="${wires}"
+               size="0.005 0.005 ${fence_height - 0.25}" material="fence_black"/>
+    <xacro:row x="${cx}" y="${cy}" z="0.42" dx="0" dy="0" dz="0.25" count="6"
+               size="${(ux * length + 0.004)} ${(uy * length + 0.004)} 0.005"
+               material="fence_black"/>
+  </xacro:macro>
+
+  <link name="world"/>
+
+  <!-- Belt conveyor along y; the part waits on it under the sensors. -->
+  <xacro:fixed_part name="conveyor">
+    <geometry>
+    <xacro:solid_block xyz="${conveyor_x} 0 ${belt_height - 0.015}"
+                       size="${belt_width} ${conveyor_length} 0.03" material="belt_rubber"/>
+    <xacro:block xyz="${conveyor_x + belt_width / 2 + 0.025} 0 ${belt_height - 0.04}"
+                 size="0.05 ${conveyor_length} 0.12" material="aluminium"/>
+    <xacro:block xyz="${conveyor_x - belt_width / 2 - 0.025} 0 ${belt_height - 0.04}"
+                 size="0.05 ${conveyor_length} 0.12" material="aluminium"/>
+    <xacro:rod xyz="${conveyor_x} ${conveyor_length / 2} ${belt_height - 0.05}" radius="0.05"
+               length="${belt_width}" rpy="0 ${pi / 2} 0" material="aluminium"/>
+    <xacro:rod xyz="${conveyor_x} ${-conveyor_length / 2} ${belt_height - 0.05}" radius="0.05"
+               length="${belt_width}" rpy="0 ${pi / 2} 0" material="aluminium"/>
+    <!-- legs and cross braces at four stations along the belt -->
+    <xacro:row x="${conveyor_x + belt_width / 2 + 0.025}" y="-1.3" z="${(belt_height - 0.1) / 2}"
+               dx="0" dy="0.8667" dz="0" count="4" size="0.05 0.05 ${belt_height - 0.1}"
+               material="aluminium"/>
+    <xacro:row x="${conveyor_x - belt_width / 2 - 0.025}" y="-1.3" z="${(belt_height - 0.1) / 2}"
+               dx="0" dy="0.8667" dz="0" count="4" size="0.05 0.05 ${belt_height - 0.1}"
+               material="aluminium"/>
+    <xacro:row x="${conveyor_x}" y="-1.3" z="0.15" dx="0" dy="0.8667" dz="0" count="4"
+               size="${belt_width + 0.05} 0.04 0.04" material="aluminium"/>
+    <!-- drive motor and gearbox at the far end -->
+    <xacro:rod xyz="${conveyor_x + belt_width / 2 + 0.13} ${-conveyor_length / 2 + 0.05}
+               ${belt_height - 0.05}" radius="0.06" length="0.16" rpy="0 ${pi / 2} 0"
+               material="drive_blue"/>
+    <xacro:block xyz="${conveyor_x + belt_width / 2 + 0.06} ${-conveyor_length / 2 + 0.05}
+                 ${belt_height - 0.05}" size="0.08 0.14 0.14" material="panel_dark"/>
+    </geometry>
+  </xacro:fixed_part>
+
+  <!-- The part being measured, plus cartons queued up and down the line. -->
+  <xacro:fixed_part name="inspected_part">
+    <geometry>
+    <xacro:solid_block xyz="${conveyor_x} 0 ${belt_height + part_height / 2}"
+                       size="${part_size} ${part_size} ${part_height}" material="cardboard"/>
+    <xacro:block xyz="${conveyor_x} 0 ${belt_height + part_height + 0.0005}"
+                 size="0.06 ${part_size + 0.002} 0.001" material="packing_tape"/>
+    </geometry>
+  </xacro:fixed_part>
+
+  <xacro:fixed_part name="queued_cartons">
+    <geometry>
+    <xacro:solid_block xyz="${conveyor_x} -0.95 ${belt_height + 0.10}" size="0.32 0.30 0.20"
+                       material="cardboard_dark"/>
+    <xacro:solid_block xyz="${conveyor_x} 1.00 ${belt_height + 0.06}" size="0.38 0.30 0.12"
+                       material="cardboard"/>
+    </geometry>
+  </xacro:fixed_part>
+
+  <!-- Euro pallet (800 x 1200) with a stack of finished cartons. -->
+  <xacro:property name="px" value="-0.45"/>
+  <xacro:property name="py" value="1.05"/>
+  <xacro:fixed_part name="pallet_station">
+    <geometry>
+    <xacro:row x="${px - 0.33}" y="${py}" z="0.011" dx="0.33" dy="0" dz="0" count="3"
+               size="0.10 1.2 0.022" material="pallet_wood"/>
+    <xacro:row x="${px - 0.33}" y="${py - 0.53}" z="0.061" dx="0.33" dy="0" dz="0" count="3"
+               size="0.145 0.10 0.078" material="pallet_wood"/>
+    <xacro:row x="${px - 0.33}" y="${py}" z="0.061" dx="0.33" dy="0" dz="0" count="3"
+               size="0.145 0.145 0.078" material="pallet_wood"/>
+    <xacro:row x="${px - 0.33}" y="${py + 0.53}" z="0.061" dx="0.33" dy="0" dz="0" count="3"
+               size="0.145 0.10 0.078" material="pallet_wood"/>
+    <xacro:row x="${px}" y="${py - 0.53}" z="0.111" dx="0" dy="0.53" dz="0" count="3"
+               size="0.8 0.145 0.022" material="pallet_wood"/>
+    <xacro:row x="${px - 0.34}" y="${py}" z="0.133" dx="0.17" dy="0" dz="0" count="5"
+               size="0.12 1.2 0.022" material="pallet_wood"/>
+    <xacro:row x="${px - 0.195}" y="${py - 0.39}" z="0.27" dx="0" dy="0.39" dz="0" count="3"
+               size="0.38 0.38 0.25" material="cardboard"/>
+    <xacro:row x="${px + 0.195}" y="${py - 0.39}" z="0.27" dx="0" dy="0.39" dz="0" count="3"
+               size="0.38 0.38 0.25" material="cardboard_dark"/>
+    <xacro:row x="${px - 0.195}" y="${py - 0.39}" z="0.522" dx="0" dy="0.39" dz="0" count="2"
+               size="0.38 0.38 0.25" material="cardboard_dark"/>
+    <xacro:block xyz="${px + 0.195} ${py - 0.39} 0.522" size="0.38 0.38 0.25"
+                 material="cardboard"/>
+    </geometry>
+  </xacro:fixed_part>
+
+  <!-- Robot control cabinet on a stand, teach pendant and a stack light. -->
+  <xacro:property name="cab_x" value="-0.55"/>
+  <xacro:property name="cab_y" value="-1.0"/>
+  <xacro:fixed_part name="control_cabinet">
+    <geometry>
+    <xacro:row x="${cab_x - 0.10}" y="${cab_y - 0.20}" z="0.15" dx="0.20" dy="0" dz="0"
+               count="2" size="0.04 0.04 0.30" material="panel_dark"/>
+    <xacro:row x="${cab_x - 0.10}" y="${cab_y + 0.20}" z="0.15" dx="0.20" dy="0" dz="0"
+               count="2" size="0.04 0.04 0.30" material="panel_dark"/>
+    <xacro:solid_block xyz="${cab_x} ${cab_y} 0.525" size="0.26 0.48 0.45"
+                       material="cabinet_grey"/>
+    <xacro:block xyz="${cab_x + 0.131} ${cab_y} 0.525" size="0.004 0.40 0.36"
+                 material="cabinet_grey"/>
+    <xacro:block xyz="${cab_x + 0.135} ${cab_y + 0.15} 0.53" size="0.01 0.02 0.10"
+                 material="panel_dark"/>
+    <xacro:block xyz="${cab_x + 0.15} ${cab_y - 0.10} 0.58" size="0.03 0.30 0.21"
+                 material="panel_dark"/>
+    <xacro:rod xyz="${cab_x + 0.17} ${cab_y + 0.02} 0.66" radius="0.018" length="0.012"
+               rpy="0 ${pi / 2} 0" material="signal_red"/>
+    <xacro:rod xyz="${cab_x} ${cab_y + 0.17} 0.78" radius="0.02" length="0.06"
+               material="panel_dark"/>
+    <xacro:rod xyz="${cab_x} ${cab_y + 0.17} 0.845" radius="0.035" length="0.07"
+               material="signal_green"/>
+    <xacro:rod xyz="${cab_x} ${cab_y + 0.17} 0.915" radius="0.035" length="0.07"
+               material="signal_amber"/>
+    <xacro:rod xyz="${cab_x} ${cab_y + 0.17} 0.985" radius="0.035" length="0.07"
+               material="signal_red"/>
+    <xacro:rod xyz="${cab_x} ${cab_y + 0.17} 1.03" radius="0.035" length="0.02"
+               material="panel_dark"/>
+    </geometry>
+  </xacro:fixed_part>
+
+  <!-- Guarding: mesh fence on the two far sides, a light curtain on the open side. -->
+  <xacro:fixed_part name="safety_guarding">
+    <geometry>
+    <xacro:fence_panel x="-1.10" y="-1.70" length="1.183" along="y"/>
+    <xacro:fence_panel x="-1.10" y="-0.517" length="1.183" along="y"/>
+    <xacro:fence_panel x="-1.10" y="0.667" length="1.183" along="y"/>
+    <xacro:fence_panel x="-1.10" y="1.85" length="1.20" along="x"/>
+    <xacro:fence_panel x="0.10" y="1.85" length="1.20" along="x"/>
+    <xacro:block xyz="1.30 1.85 ${fence_height / 2}" size="0.06 0.06 ${fence_height}"
+                 material="safety_yellow"/>
+    <xacro:block xyz="-0.95 -1.70 0.85" size="0.05 0.05 1.7" material="fence_black"/>
+    <xacro:block xyz="-0.95 -1.70 1.725" size="0.06 0.06 0.05" material="safety_yellow"/>
+    <xacro:block xyz="1.25 -1.70 0.85" size="0.05 0.05 1.7" material="fence_black"/>
+    <xacro:block xyz="1.25 -1.70 1.725" size="0.06 0.06 0.05" material="safety_yellow"/>
+    </geometry>
+  </xacro:fixed_part>
+
+  <!-- Yellow floor tape: cell boundary and a keep-out square round the riser. -->
+  <xacro:fixed_part name="floor_markings">
+    <geometry>
+    <xacro:block xyz="0.075 -1.60 0.001" size="2.25 0.06 0.002" material="safety_yellow"/>
+    <xacro:block xyz="1.17 0.10 0.001" size="0.06 3.40 0.002" material="safety_yellow"/>
+    <xacro:block xyz="0 -0.35 0.001" size="0.76 0.05 0.002" material="safety_yellow"/>
+    <xacro:block xyz="0 0.35 0.001" size="0.76 0.05 0.002" material="safety_yellow"/>
+    <xacro:block xyz="-0.355 0 0.001" size="0.05 0.66 0.002" material="safety_yellow"/>
+    <xacro:block xyz="0.355 0 0.001" size="0.05 0.66 0.002" material="safety_yellow"/>
+    </geometry>
+  </xacro:fixed_part>
+
+  <gazebo>
+    <static>true</static>
+  </gazebo>
+</robot>
